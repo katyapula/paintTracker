@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Army {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  squads Squad[]
+
+  @@index([userId])
+  @@map("armies")
+}
+
+model Squad {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  armyId    String   @map("army_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  army  Army   @relation(fields: [armyId], references: [id], onDelete: Cascade)
+  minis Mini[]
+
+  @@index([userId])
+  @@index([armyId])
+  @@map("squads")
+}
+
+model Mini {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  squadId        String    @map("squad_id") @db.Uuid
+  name           String
+  description    String?
+  tags           Json?
+  assembled      Boolean   @default(false)
+  primed         Boolean   @default(false)
+  painted        Boolean   @default(false)
+  based          Boolean   @default(false)
+  photographed   Boolean   @default(false)
+  assembledAt    DateTime? @map("assembled_at")
+  primedAt       DateTime? @map("primed_at")
+  paintedAt      DateTime? @map("painted_at")
+  basedAt        DateTime? @map("based_at")
+  photographedAt DateTime? @map("photographed_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  squad Squad @relation(fields: [squadId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([squadId])
+  @@map("minis")
+}

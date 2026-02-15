@@ -59,7 +59,9 @@ Toggle behavior:
 2. In **Project Settings → API**, copy:
    - `Project URL` -> `NEXT_PUBLIC_SUPABASE_URL`
    - `anon public key` -> `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. In **Project Settings → Database**, copy the **Prisma/transaction** connection string into `DATABASE_URL`.
+3. In **Project Settings → Database**, copy:
+   - **Prisma/transaction (pooler)** connection string -> `DATABASE_URL`
+   - **Direct connection** string -> `DIRECT_URL`
 4. In **Authentication → Providers → Google**:
    - Enable Google provider.
    - Add Google OAuth client ID/secret.
@@ -81,6 +83,7 @@ In Google Cloud Console OAuth client settings, add:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `DATABASE_URL`
+   - `DIRECT_URL`
 3. In Supabase Auth URL config, update production URLs:
    - Site URL: `https://YOUR_VERCEL_DOMAIN`
    - Redirect URL: `https://YOUR_VERCEL_DOMAIN/api/auth/callback`

@@ -36,12 +36,12 @@ type DeleteState = {
 
 type StageKey = "assembled" | "primed" | "painted" | "based" | "photographed";
 
-const stageConfig: Array<{ key: StageKey; label: string }> = [
-  { key: "assembled", label: "Assembled" },
-  { key: "primed", label: "Primed" },
-  { key: "painted", label: "Painted" },
-  { key: "based", label: "Based" },
-  { key: "photographed", label: "Photographed" },
+const stageConfig: Array<{ key: StageKey; shortLabel: string; longLabel: string }> = [
+  { key: "assembled", shortLabel: "Asm", longLabel: "Assembled" },
+  { key: "primed", shortLabel: "Prm", longLabel: "Primed" },
+  { key: "painted", shortLabel: "Pnt", longLabel: "Painted" },
+  { key: "based", shortLabel: "Bas", longLabel: "Based" },
+  { key: "photographed", shortLabel: "Pho", longLabel: "Photographed" },
 ];
 
 const stageTimestampKeyMap: Record<StageKey, keyof MiniNode> = {
@@ -448,7 +448,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                         }
                                         disabled={pending || isPending}
                                       >
-                                        {stage.label}
+                                        <span className="stage-label-short">{stage.shortLabel}</span>
+                                        <span className="stage-label-long">{stage.longLabel}</span>
                                       </button>
                                     );
                                   })}

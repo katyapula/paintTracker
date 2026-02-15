@@ -37,11 +37,11 @@ type DeleteState = {
 type StageKey = "assembled" | "primed" | "painted" | "based" | "photographed";
 
 const stageConfig: Array<{ key: StageKey; label: string }> = [
-  { key: "assembled", label: "Asm" },
-  { key: "primed", label: "Prm" },
-  { key: "painted", label: "Pnt" },
-  { key: "based", label: "Bas" },
-  { key: "photographed", label: "Pho" },
+  { key: "assembled", label: "Assembled" },
+  { key: "primed", label: "Primed" },
+  { key: "painted", label: "Painted" },
+  { key: "based", label: "Based" },
+  { key: "photographed", label: "Photographed" },
 ];
 
 const stageTimestampKeyMap: Record<StageKey, keyof MiniNode> = {

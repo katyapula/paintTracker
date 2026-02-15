@@ -111,10 +111,20 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>({});
+  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     setTree(initialTree);
   }, [initialTree]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 760px)");
+    const update = () => setIsDesktop(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener("change", update);
+
+    return () => mediaQuery.removeEventListener("change", update);
+  }, []);
 
   const allMinis = useMemo(
     () => tree.armies.flatMap((army) => army.squads.flatMap((squad) => squad.minis)),
@@ -448,8 +458,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                         }
                                         disabled={pending || isPending}
                                       >
-                                        <span className="stage-label-short">{stage.shortLabel}</span>
-                                        <span className="stage-label-long">{stage.longLabel}</span>
+                                        {isDesktop ? stage.longLabel : stage.shortLabel}
                                       </button>
                                     );
                                   })}

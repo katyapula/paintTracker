@@ -49,7 +49,7 @@ a.login-button {
   white-space: nowrap;
 }
 
-.sticky-header a {
+a {
   color: var(--primary);
 }
 
@@ -123,22 +123,6 @@ button:disabled {
   color: var(--text-muted);
 }
 
-.header-actions {
-  margin-top: 0.6rem;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.header-actions form {
-  margin: 0;
-}
-
-.header-actions button,
-.header-actions a {
-  width: 100%;
-}
-
 .dashboard-main {
   display: grid;
   gap: 0.75rem;
@@ -180,12 +164,6 @@ button:disabled {
   display: none;
 }
 
-.army-card > summary div,
-.squad-card > summary div {
-  display: grid;
-  gap: 0.2rem;
-}
-
 .army-card p,
 .squad-card p {
   margin: 0;
@@ -198,6 +176,17 @@ button:disabled {
   flex-wrap: wrap;
   gap: 0.45rem;
   margin-top: 0.65rem;
+}
+
+.row-actions button {
+  width: 100%;
+  font-weight: 500;
+}
+
+.row-actions svg {
+  height: 20px;
+  width: 20px;
+  margin-right: 10px;
 }
 
 .squad-list {
@@ -224,7 +213,6 @@ button:disabled {
 }
 
 .mini-row p {
-  margin: 0.2rem 0 0;
   color: var(--text-muted);
 }
 
@@ -294,11 +282,6 @@ button:disabled {
 }
 
 @media (min-width: 760px) {
-  .header-actions {
-    display: flex;
-    justify-content: flex-end;
-  }
-
   .sticky-header {
     display: flex;
     align-items: center;
@@ -326,11 +309,39 @@ button:disabled {
   gap: 2rem;
 }
 
+.flex-start {
+  display: flex;
+  justify-content: flex-start;
+  gap: 2rem;
+  padding: 10px;
+}
+
 .button-unstyled {
   border: 0;
   cursor: pointer;
+  background-color: transparent;
 
   &:hover {
     background-color: var(--surface-muted);
   }
+}
+
+.item-actions {
+  display: flex;
+  align-items: flex-start;
+}
+
+.item-actions button {
+  border: 0;
+  cursor: pointer;
+  background-color: transparent;
+
+  &:hover {
+    background-color: var(--surface-muted);
+  }
+}
+
+.item-actions svg {
+  height: 18px;
+  width: 18px;
 }

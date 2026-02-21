@@ -8,6 +8,8 @@ import type { ArmyNode, DashboardTree, MiniNode, SquadNode } from "@/lib/types";
 import { BsFiletypeCsv, BsFiletypeJson } from "react-icons/bs";
 import {GrEdit} from "react-icons/gr";
 import {RiDeleteBinLine} from "react-icons/ri";
+import {VscSignOut} from "react-icons/vsc";
+import {GoPlus} from "react-icons/go";
 
 type ArmyFormState = {
   mode: "create" | "edit";
@@ -114,20 +116,10 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [pendingToggles, setPendingToggles] = useState<Record<string, boolean>>({});
-  const [isDesktop, setIsDesktop] = useState(false);
 
   useEffect(() => {
     setTree(initialTree);
   }, [initialTree]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 760px)");
-    const update = () => setIsDesktop(mediaQuery.matches);
-    update();
-    mediaQuery.addEventListener("change", update);
-
-    return () => mediaQuery.removeEventListener("change", update);
-  }, []);
 
   const allMinis = useMemo(
     () => tree.armies.flatMap((army) => army.squads.flatMap((squad) => squad.minis)),
@@ -314,24 +306,16 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
     <div className="dashboard-shell">
       <header className="sticky-header">
         <div>
-          <div className='space-between'>
-            <h1>PaintTracker</h1>
-            <div className='space-between'>
-              <a href="/api/export?format=json"><BsFiletypeJson size={23} /></a>
-              <a href="/api/export?format=csv"><BsFiletypeCsv size={23} /></a>
-            </div>
-          </div>
+          <h1>PaintTracker</h1>
           <p>
             {overallDone}/{overallTotal} minis fully done • {formatPercent(overallProgress)} overall
           </p>
         </div>
-        <div className="header-actions">
+        <div className="row-actions">
           <button type="button" onClick={() => setArmyForm({ mode: "create", name: "" })}>
+            <GoPlus />
             Add Army
           </button>
-          <form action="/api/auth/logout" method="post">
-            <button type="submit">Sign out</button>
-          </form>
         </div>
       </header>
 
@@ -351,12 +335,27 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
 
             return (
               <details key={army.id} open className="army-card">
-                <summary>
+                <summary className='space-between'>
                   <div>
                     <strong>{army.name}</strong>
                     <p>
                       {armyStats.done}/{armyStats.total} done • {formatPercent(armyStats.progress)}
                     </p>
+                  </div>
+                  <div className='item-actions'>
+                    <button
+                      type="button"
+                      onClick={() => setArmyForm({ mode: "edit", id: army.id, name: army.name })}
+                    >
+                      <GrEdit />
+                    </button>
+                    <button
+                      type="button"
+                      className="danger"
+                      onClick={() => setDeleteState({ type: "army", id: army.id, name: army.name })}
+                    >
+                      <RiDeleteBinLine />
+                    </button>
                   </div>
                 </summary>
 
@@ -365,20 +364,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                     type="button"
                     onClick={() => setSquadForm({ mode: "create", name: "", armyId: army.id })}
                   >
+                    <GoPlus />
                     Add Squad
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setArmyForm({ mode: "edit", id: army.id, name: army.name })}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={() => setDeleteState({ type: "army", id: army.id, name: army.name })}
-                  >
-                    Delete
                   </button>
                 </div>
 
@@ -388,12 +375,36 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
 
                     return (
                       <details key={squad.id} open className="squad-card">
-                        <summary>
+                        <summary className='space-between'>
                           <div>
                             <strong>{squad.name}</strong>
                             <p>
                               {squadStats.done}/{squadStats.total} done • {formatPercent(squadStats.progress)}
                             </p>
+                          </div>
+                          <div className='item-actions'>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSquadForm({
+                                  mode: "edit",
+                                  id: squad.id,
+                                  name: squad.name,
+                                  armyId: squad.armyId,
+                                })
+                              }
+                            >
+                              <GrEdit />
+                            </button>
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() =>
+                                setDeleteState({ type: "squad", id: squad.id, name: squad.name })
+                              }
+                            >
+                              <RiDeleteBinLine />
+                            </button>
                           </div>
                         </summary>
 
@@ -410,29 +421,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                               })
                             }
                           >
+                            <GoPlus />
                             Add Mini
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setSquadForm({
-                                mode: "edit",
-                                id: squad.id,
-                                name: squad.name,
-                                armyId: squad.armyId,
-                              })
-                            }
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="danger"
-                            onClick={() =>
-                              setDeleteState({ type: "squad", id: squad.id, name: squad.name })
-                            }
-                          >
-                            Delete
                           </button>
                         </div>
 
@@ -446,13 +436,9 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                   <div>
                                     <strong>{mini.name}</strong>
                                     <p>{formatPercent(miniProgress)}</p>
-                                    {mini.tags && mini.tags.length > 0 && (
-                                      <p className="meta">{mini.tags.join(", ")}</p>
-                                    )}
                                   </div>
-                                  <div>
+                                  <div className='item-actions'>
                                     <button
-                                      className='button-unstyled'
                                       type="button"
                                       onClick={() =>
                                         setMiniForm({
@@ -465,19 +451,26 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                         })
                                       }
                                     >
-                                      <GrEdit size={18} />
+                                      <GrEdit />
                                     </button>
                                     <button
                                       type="button"
-                                      className="danger button-unstyled"
+                                      className="danger"
                                       onClick={() =>
                                         setDeleteState({ type: "mini", id: mini.id, name: mini.name })
                                       }
                                     >
-                                      <RiDeleteBinLine size={18} />
+                                      <RiDeleteBinLine />
                                     </button>
                                   </div>
                                 </div>
+
+                                {mini.tags && mini.tags.length > 0 && (
+                                  <p className="meta">{mini.tags.join(' • ')}</p>
+                                )}
+                                {mini.description && (
+                                  <p className="meta">{mini.description}</p>
+                                )}
 
                                 <div className="toggle-grid">
                                   {stageConfig.map((stage) => {
@@ -494,7 +487,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                         }
                                         disabled={pending || isPending}
                                       >
-                                        {isDesktop ? stage.longLabel : stage.shortLabel}
+                                        {stage.shortLabel}
                                       </button>
                                     );
                                   })}
@@ -516,8 +509,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
       </main>
 
       {armyForm && (
-        <div className="modal-overlay">
-          <div className="modal-card">
+        <div className="modal-overlay" onClick={() => setArmyForm(null)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <h2>{armyForm.mode === "create" ? "Create Army" : "Edit Army"}</h2>
             <form onSubmit={handleArmySubmit} className="modal-form">
               <label>
@@ -543,8 +536,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
       )}
 
       {squadForm && (
-        <div className="modal-overlay">
-          <div className="modal-card">
+        <div className="modal-overlay" onClick={() => setSquadForm(null)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <h2>{squadForm.mode === "create" ? "Create Squad" : "Edit Squad"}</h2>
             <form onSubmit={handleSquadSubmit} className="modal-form">
               <label>
@@ -586,8 +579,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
       )}
 
       {miniForm && (
-        <div className="modal-overlay">
-          <div className="modal-card">
+        <div className="modal-overlay" onClick={() => setMiniForm(null)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <h2>{miniForm.mode === "create" ? "Create Mini" : "Edit Mini"}</h2>
             <form onSubmit={handleMiniSubmit} className="modal-form">
               <label>
@@ -649,8 +642,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
       )}
 
       {deleteState && (
-        <div className="modal-overlay">
-          <div className="modal-card">
+        <div className="modal-overlay" onClick={() => setDeleteState(null)}>
+          <div className="modal-card" onClick={(event) => event.stopPropagation()}>
             <h2>Confirm Delete</h2>
             <p>
               Delete {deleteState.type} <strong>{deleteState.name}</strong>? This cannot be undone.
@@ -666,6 +659,15 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
           </div>
         </div>
       )}
+      <div className='space-between'>
+        <div className='flex-start'>
+          <a href="/api/export?format=json"><BsFiletypeJson size={23} /></a>
+          <a href="/api/export?format=csv"><BsFiletypeCsv size={23} /></a>
+        </div>
+        <form action="/api/auth/logout" method="post">
+          <button className='button-unstyled' type="submit"><VscSignOut size={25} /></button>
+        </form>
+      </div>
     </div>
   );
 }

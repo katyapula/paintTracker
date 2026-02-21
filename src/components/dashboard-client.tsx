@@ -13,6 +13,7 @@ import {GoPlus} from "react-icons/go";
 import {FaPaintBrush, FaSprayCan, FaTools} from "react-icons/fa";
 import {MdPhotoCamera} from "react-icons/md";
 import {PiCactusFill} from "react-icons/pi";
+import {SiPivotaltracker} from "react-icons/si";
 
 type ArmyFormState = {
   mode: "create" | "edit";
@@ -351,7 +352,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
     <div className="dashboard-shell">
       <header className="sticky-header">
         <div>
-          <h1>PaintTracker</h1>
+          <h1><SiPivotaltracker />Paint Tracker</h1>
           <p>
             {overallDone}/{overallTotal} minis fully done • {formatPercent(overallProgress)} overall
           </p>

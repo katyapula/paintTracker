@@ -35,8 +35,7 @@ textarea {
 }
 
 button,
-a.login-button,
-.sticky-header a {
+a.login-button {
   border-radius: 10px;
   border: 1px solid var(--line);
   background: var(--surface);
@@ -47,11 +46,15 @@ a.login-button,
   align-items: center;
   justify-content: center;
   min-height: 42px;
+  white-space: nowrap;
+}
+
+.sticky-header a {
+  color: var(--primary);
 }
 
 button:hover,
-a.login-button:hover,
-.sticky-header a:hover {
+a.login-button:hover {
   border-color: #b7c4d1;
 }
 
@@ -306,5 +309,28 @@ button:disabled {
   .sticky-header p {
     margin-top: 0.2rem;
   }
+}
 
+@media (max-width: 760px) {
+  button,
+  a.login-button {
+    padding: 0.3rem 0.8rem;
+    min-height: 32px;
+    font-size: 14px;
+  }
+}
+
+.space-between {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.button-unstyled {
+  border: 0;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--surface-muted);
+  }
 }

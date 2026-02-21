@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 
 import { getMiniDoneCount, getMiniProgress, toPercent } from "@/lib/progress";
 import type { ArmyNode, DashboardTree, MiniNode, SquadNode } from "@/lib/types";
+import { BsFiletypeCsv, BsFiletypeJson } from "react-icons/bs";
+import {GrEdit} from "react-icons/gr";
+import {RiDeleteBinLine} from "react-icons/ri";
 
 type ArmyFormState = {
   mode: "create" | "edit";
@@ -311,7 +314,13 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
     <div className="dashboard-shell">
       <header className="sticky-header">
         <div>
-          <h1>PaintTracker</h1>
+          <div className='space-between'>
+            <h1>PaintTracker</h1>
+            <div className='space-between'>
+              <a href="/api/export?format=json"><BsFiletypeJson size={23} /></a>
+              <a href="/api/export?format=csv"><BsFiletypeCsv size={23} /></a>
+            </div>
+          </div>
           <p>
             {overallDone}/{overallTotal} minis fully done • {formatPercent(overallProgress)} overall
           </p>
@@ -320,8 +329,6 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
           <button type="button" onClick={() => setArmyForm({ mode: "create", name: "" })}>
             Add Army
           </button>
-          <a href="/api/export?format=json">Export JSON</a>
-          <a href="/api/export?format=csv">Export CSV</a>
           <form action="/api/auth/logout" method="post">
             <button type="submit">Sign out</button>
           </form>
@@ -435,12 +442,41 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
 
                             return (
                               <article key={mini.id} className="mini-row">
-                                <div>
-                                  <strong>{mini.name}</strong>
-                                  <p>{formatPercent(miniProgress)}</p>
-                                  {mini.tags && mini.tags.length > 0 && (
-                                    <p className="meta">{mini.tags.join(", ")}</p>
-                                  )}
+                                <div className='space-between'>
+                                  <div>
+                                    <strong>{mini.name}</strong>
+                                    <p>{formatPercent(miniProgress)}</p>
+                                    {mini.tags && mini.tags.length > 0 && (
+                                      <p className="meta">{mini.tags.join(", ")}</p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <button
+                                      className='button-unstyled'
+                                      type="button"
+                                      onClick={() =>
+                                        setMiniForm({
+                                          mode: "edit",
+                                          id: mini.id,
+                                          name: mini.name,
+                                          squadId: mini.squadId,
+                                          description: mini.description ?? "",
+                                          tagsText: (mini.tags ?? []).join(", "),
+                                        })
+                                      }
+                                    >
+                                      <GrEdit size={18} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="danger button-unstyled"
+                                      onClick={() =>
+                                        setDeleteState({ type: "mini", id: mini.id, name: mini.name })
+                                      }
+                                    >
+                                      <RiDeleteBinLine size={18} />
+                                    </button>
+                                  </div>
                                 </div>
 
                                 <div className="toggle-grid">
@@ -462,33 +498,6 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                       </button>
                                     );
                                   })}
-                                </div>
-
-                                <div className="row-actions">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setMiniForm({
-                                        mode: "edit",
-                                        id: mini.id,
-                                        name: mini.name,
-                                        squadId: mini.squadId,
-                                        description: mini.description ?? "",
-                                        tagsText: (mini.tags ?? []).join(", "),
-                                      })
-                                    }
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="danger"
-                                    onClick={() =>
-                                      setDeleteState({ type: "mini", id: mini.id, name: mini.name })
-                                    }
-                                  >
-                                    Delete
-                                  </button>
                                 </div>
                               </article>
                             );

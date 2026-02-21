@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
+import {FormEvent, ReactElement, useEffect, useMemo, useState, useTransition} from "react";
 import { useRouter } from "next/navigation";
 
 import { getMiniDoneCount, getMiniProgress, toPercent } from "@/lib/progress";
@@ -10,6 +10,9 @@ import {GrEdit} from "react-icons/gr";
 import {RiDeleteBinLine} from "react-icons/ri";
 import {VscSignOut} from "react-icons/vsc";
 import {GoPlus} from "react-icons/go";
+import {FaPaintBrush, FaSprayCan, FaTools} from "react-icons/fa";
+import {MdPhotoCamera} from "react-icons/md";
+import {PiCactusFill} from "react-icons/pi";
 
 type ArmyFormState = {
   mode: "create" | "edit";
@@ -41,12 +44,12 @@ type DeleteState = {
 
 type StageKey = "assembled" | "primed" | "painted" | "based" | "photographed";
 
-const stageConfig: Array<{ key: StageKey; shortLabel: string; longLabel: string }> = [
-  { key: "assembled", shortLabel: "Asm", longLabel: "Assembled" },
-  { key: "primed", shortLabel: "Prm", longLabel: "Primed" },
-  { key: "painted", shortLabel: "Pnt", longLabel: "Painted" },
-  { key: "based", shortLabel: "Bas", longLabel: "Based" },
-  { key: "photographed", shortLabel: "Pho", longLabel: "Photographed" },
+const stageConfig: Array<{ key: StageKey; shortLabel: string; icon: ReactElement }> = [
+  { key: "assembled", shortLabel: "Asm", icon: <FaTools /> },
+  { key: "primed", shortLabel: "Prm", icon: <FaSprayCan /> },
+  { key: "painted", shortLabel: "Pnt", icon: <FaPaintBrush /> },
+  { key: "based", shortLabel: "Bas", icon: <PiCactusFill /> },
+  { key: "photographed", shortLabel: "Pho", icon: <MdPhotoCamera /> },
 ];
 
 const stageTimestampKeyMap: Record<StageKey, keyof MiniNode> = {
@@ -255,48 +258,90 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
   };
 
   const toggleStage = async (miniId: string, stage: StageKey, value: boolean) => {
-    const toggleKey = `${miniId}:${stage}`;
-    if (pendingToggles[toggleKey]) {
-      return;
-    }
+    const stageOrder = stageConfig.map((s) => s.key);
+    const stageIndex = stageOrder.indexOf(stage);
+
+    // Which stages should change, based on the new value?
+    // - turning ON => stage + all previous
+    // - turning OFF => stage + all next
+    const affectedStages = value
+      ? stageOrder.slice(0, stageIndex + 1)
+      : stageOrder.slice(stageIndex);
+
+    const toggleKeys = affectedStages.map((s) => `${miniId}:${s}`);
+
+    // prevent re-entry if any affected toggle is already pending
+    if (toggleKeys.some((k) => pendingToggles[k])) return;
 
     setErrorMessage(null);
 
-    setPendingToggles((prev) => ({ ...prev, [toggleKey]: true }));
-    const nextTree = structuredClone(tree);
-    const stageTimestampKey = stageTimestampKeyMap[stage];
+    // mark all affected toggles as pending
+    setPendingToggles((prev) => {
+      const copy = { ...prev };
+      for (const k of toggleKeys) copy[k] = true;
+      return copy;
+    });
 
+    const prevTree = structuredClone(tree);
+    const nowIso = new Date().toISOString();
+
+    // optimistic update
     setTree((prev) => ({
       armies: prev.armies.map((army) => ({
         ...army,
         squads: army.squads.map((squad) => ({
           ...squad,
-          minis: squad.minis.map((mini) =>
-            mini.id === miniId
-              ? {
-                  ...mini,
-                  [stage]: value,
-                  [stageTimestampKey]: value ? new Date().toISOString() : null,
-                }
-              : mini,
-          ),
+          minis: squad.minis.map((mini) => {
+            if (mini.id !== miniId) return mini;
+
+            // Apply changes stage-by-stage so we can decide what to do with timestamps.
+            let nextMini: typeof mini = { ...mini };
+
+            for (const s of affectedStages) {
+              const tsKey = stageTimestampKeyMap[s];
+              const nextValue = value; // all affected stages get the same target value (true or false)
+
+              // if turning ON and it was already ON -> keep existing timestamp
+              // if turning ON and it was OFF -> set timestamp to now
+              // if turning OFF -> null out timestamp
+              const wasOn = Boolean(nextMini[s]);
+
+              nextMini = {
+                ...nextMini,
+                [s]: nextValue,
+                [tsKey]: nextValue ? (wasOn ? nextMini[tsKey] : nowIso) : null,
+              };
+            }
+
+            return nextMini;
+          }),
         })),
       })),
     }));
 
     try {
-      await sendJson(`/api/minis/${miniId}/toggle-stage`, {
-        method: "POST",
-        body: JSON.stringify({ stage, value }),
-      });
+      // Update server for each affected stage.
+      // If you later add a "bulk toggle" endpoint, you can replace this with a single request.
+      for (const s of affectedStages) {
+        await sendJson(`/api/minis/${miniId}/toggle-stage`, {
+          method: "POST",
+          body: JSON.stringify({ stage: s, value }),
+        });
+      }
+
       handleRefresh();
     } catch (error) {
-      setTree(nextTree);
+      // rollback optimistic update
+      setTree(prevTree);
       setErrorMessage(error instanceof Error ? error.message : "Stage update failed");
+
+      // refresh anyway to ensure UI matches server if some requests succeeded
+      handleRefresh();
     } finally {
+      // clear pending flags for all affected toggles
       setPendingToggles((prev) => {
         const copy = { ...prev };
-        delete copy[toggleKey];
+        for (const k of toggleKeys) delete copy[k];
         return copy;
       });
     }
@@ -487,6 +532,8 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                                         }
                                         disabled={pending || isPending}
                                       >
+                                        {stage.icon}
+                                        &nbsp;
                                         {stage.shortLabel}
                                       </button>
                                     );
@@ -524,7 +571,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                   required
                 />
               </label>
-              <div className="row-actions">
+              <div className="modal-actions">
                 <button type="submit">Save</button>
                 <button type="button" onClick={() => setArmyForm(null)}>
                   Cancel
@@ -567,7 +614,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                   ))}
                 </select>
               </label>
-              <div className="row-actions">
+              <div className="modal-actions">
                 <button type="submit">Save</button>
                 <button type="button" onClick={() => setSquadForm(null)}>
                   Cancel
@@ -630,7 +677,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
                   placeholder="character, elite, hero"
                 />
               </label>
-              <div className="row-actions">
+              <div className="modal-actions">
                 <button type="submit">Save</button>
                 <button type="button" onClick={() => setMiniForm(null)}>
                   Cancel
@@ -648,7 +695,7 @@ export function DashboardClient({ initialTree }: { initialTree: DashboardTree })
             <p>
               Delete {deleteState.type} <strong>{deleteState.name}</strong>? This cannot be undone.
             </p>
-            <div className="row-actions">
+            <div className="modal-actions">
               <button type="button" className="danger" onClick={() => void handleDelete()}>
                 Delete
               </button>

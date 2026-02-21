@@ -224,21 +224,26 @@ button:disabled {
 .toggle-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.4rem;
+  border-radius: 12px;
+  background: linear-gradient(90deg,rgba(131, 58, 180, 0.5) 0%, rgba(253, 29, 29, 0.5) 23%, rgba(252, 176, 69, 0.5) 46%, rgba(252, 249, 69, 0.5) 66%, rgba(170, 252, 69, 0.5) 83%, rgba(69, 252, 151, 0.5) 99%);
+  overflow: hidden;
+  border: 1px solid var(--line);
 }
 
 .toggle {
   min-height: 40px;
   padding: 0.45rem 0;
   font-size: 0.8rem;
-  border-color: #c8d3df;
+  color: #0f4d79;
+  font-weight: 700;
+  border-radius: 0;
+  border: 0;
+  background: white;
 }
 
 .toggle.on {
-  border-color: var(--primary);
-  background: var(--primary-soft);
-  color: #0f4d79;
-  font-weight: 700;
+  color: #000;
+  background-color: transparent;
 }
 
 .modal-overlay {
@@ -344,4 +349,15 @@ button:disabled {
 .item-actions svg {
   height: 18px;
   width: 18px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.modal-actions button {
+  width: 100%;
+  font-weight: 500;
 }
